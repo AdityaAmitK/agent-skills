@@ -1,0 +1,17 @@
+# Secrets and local agent/runtime state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+access_token.json
+credentials.json
+token.json
+
+# Python and editor files
+__pycache__/
+*.py[cod]
+.DS_Store
+.idea/
+.vscode/
