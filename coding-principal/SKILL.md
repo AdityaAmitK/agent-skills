@@ -1,17 +1,22 @@
 ---
 name: coding-principal
-description: "Keep planning and default Codex work on GPT-6 Sol low, and delegate bounded coding work to a GPT-6 Luna low subagent when available."
+description: "Balance quality, speed, and cost by using a stronger model for brainstorming, planning, and review, and a faster, cheaper model for bounded coding tasks when model selection and delegation are available."
 ---
 
 # Coding principal
 
-Use this preference for Codex work:
+Spend model capacity where it improves the result. Use a stronger, usually more expensive model to brainstorm ideas, weigh tradeoffs, plan the work, and review the implementation. Use a faster, cheaper model to write code for clearly scoped tasks. The goal is to preserve quality while reducing the cost of using the strongest model for the whole job; savings depend on the workload and review effort.
 
-- The main agent plans, coordinates, and handles default tasks on `gpt-6-sol` with low reasoning effort when that model can be selected.
-- For a concrete, bounded coding subtask, spawn a subagent using `gpt-6-luna` with low reasoning effort. Give it the task context and let the main agent review the result and finish the user request. Use a limited history fork when setting the subagent model and effort.
+## Workflow
 
-"Light" means the model selector's **low** reasoning effort. Explicit model instructions in the current request override this preference.
+- Follow the user's explicit model choices and budget. Otherwise, choose available models by their capabilities, speed, and cost rather than fixed names. Do not invent prices or claim a model is cheaper without reliable information.
+- Let the stronger model clarify the goal, inspect relevant context, and define a bounded implementation task with acceptance criteria.
+- When supported, delegate that task to a faster, cheaper coding model. Give it the necessary files, constraints, and validation steps, with enough context to work independently.
+- Have the coordinating model review the result and the relevant checks before delivery. Fix routine issues with the coding model; use the stronger model for unresolved reasoning or design problems.
+- Keep delegation proportional to the work. A small edit may cost less to complete directly than to hand off and review. Account for retries and coordination when assessing savings.
 
-An active task's model cannot be changed by this skill. Subagents can use a different model when the available agent tool supports it. Do not create a separate user-owned Codex task solely to change models. If subagent delegation is unavailable, continue the task and state the model limitation when it matters; never claim a switch occurred.
+## Tool limits
 
-This is a simple fixed preference. Do not call Jev, classify complexity, or add escalation rules unless Aditya asks to extend the principal.
+Use only model selection and delegation mechanisms the environment actually supports. An active task may not allow its model to be changed. If a suitable second model or delegation is unavailable, continue with the current model and state the limitation when relevant. Never claim a model switch or delegation occurred unless it did.
+
+Do not create a separate user-owned chat solely to switch models. The skill provides a working preference, not permission for unrelated actions.

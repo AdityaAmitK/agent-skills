@@ -19,7 +19,7 @@ Install `humanizer` and `coding-principal` the same way when wanted. Avoid overw
 
 - `algotrading`: includes a small Python starter toolkit for Kite daily history, CSV export, a generic strategy callback and backtest, and a bounded dry-run-first order helper. It is an example starter, not a production trading system or personal account configuration.
 - `humanizer`: adapted writing guidance with upstream attribution in `THIRD_PARTY_NOTICES.md`.
-- `coding-principal`: preference guidance for planning and bounded coding delegation.
+- `coding-principal`: balances stronger models for brainstorming, planning, and review with faster, cheaper models for writing code, aiming to retain quality while reducing cost.
 
 ## AlgoTrading starter
 
