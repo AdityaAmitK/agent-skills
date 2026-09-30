@@ -17,9 +17,32 @@ Install `humanizer` and `coding-principal` the same way when wanted. Avoid overw
 
 ## Skills
 
-- `algotrading`: project guidance for Kite Connect workflows, research, backtesting, and controlled execution. It does not include a trading engine or personal account configuration.
+- `algotrading`: includes a small Python starter toolkit for Kite daily history, CSV export, a generic strategy callback and backtest, and a bounded dry-run-first order helper. It is an example starter, not a production trading system or personal account configuration.
 - `humanizer`: adapted writing guidance with upstream attribution in `THIRD_PARTY_NOTICES.md`.
 - `coding-principal`: preference guidance for planning and bounded coding delegation.
+
+## AlgoTrading starter
+
+Use Python 3.10 or newer. From `algotrading/`, create an environment and install the Kite dependency:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+Set `KITE_API_KEY` and `KITE_API_SECRET` using your secret manager. Configure the Kite app's registered redirect URL. Open `https://kite.zerodha.com/connect/login?v=3&api_key=YOUR_API_KEY`, complete the broker login, and copy the short-lived `request_token` from the registered redirect URL when prompted by `.venv/bin/python scripts/kite_auth.py`. The helper exchanges it immediately and stores the access token in a mode-600 file. See the [official Kite login flow](https://kite.trade/docs/connect/v3/user/) for details.
+
+Export a daily history CSV with your own instrument token, then run the example strategy:
+
+```sh
+.venv/bin/python scripts/export_history.py 123456 2020-01-01 2025-12-31 data/daily.csv
+.venv/bin/python scripts/backtest.py data/daily.csv --strategy example_strategy:signal --cash 100000 --fee-bps 10 --slippage-bps 5
+.venv/bin/python scripts/order.py ABC BUY 1 100 --max-value 5000
+```
+
+The history exporter makes bounded requests and pauses between chunks. `data/daily.csv` is generated input, not included. The last command only prints a proposed order; history export and real order submission contact Kite. Live submission additionally requires explicit `--execute`, account identity and value limits. Review the AlgoTrading skill and code before use. From the repository root, run offline checks with `python3 -m unittest discover -s algotrading/tests`.
+
+For a VPS, start with the [offline systemd example](algotrading/references/vps.md). It provides an editable backtest service template and does not install a service or enable a trading schedule.
 
 ## License
 

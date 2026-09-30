@@ -1,0 +1,14 @@
+[Unit]
+Description=Example offline strategy backtest
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=REPLACE_WITH_SERVICE_USER
+WorkingDirectory=/REPLACE/WITH/PROJECT/DIRECTORY
+ExecStart=/REPLACE/WITH/PROJECT/DIRECTORY/.venv/bin/python /REPLACE/WITH/PROJECT/DIRECTORY/scripts/backtest.py /REPLACE/WITH/PROJECT/DIRECTORY/data/daily.csv
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/REPLACE/WITH/PROJECT/DIRECTORY/data

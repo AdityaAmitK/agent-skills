@@ -5,7 +5,13 @@ description: Help build, backtest, configure, and operate reusable algorithmic t
 
 # Algorithmic trading project guide
 
-Use this skill to guide work in the user's chosen trading project. It is guidance for building project-specific tooling; it does not bundle a trading engine, credentials, strategies, market data, or VPS access details. Inspect the project and preserve its architecture. Do not import personal account assumptions or artifacts from another checkout.
+Use this skill to guide work in the user's chosen trading project. `scripts/` contains a small starter toolkit and `requirements.txt` its optional Kite dependency. These are examples to adapt, not a production trading system. They do not include credentials, market data, a profitable strategy, or VPS access details. Inspect the project and preserve its architecture. Do not import personal account assumptions or artifacts from another checkout.
+
+For a new project, copy the starter scripts and install `python -m pip install -r requirements.txt` from this directory. The backtest uses a daily CSV with `date`, `open`, and `close` columns. Run `python scripts/backtest.py --help` for options. User strategy callbacks passed as `module:function` receive only bars through the prior close and must return a boolean long/flat signal. `python scripts/backtest.py data/daily.csv --strategy example_strategy:signal` runs the included example. It is illustrative, not a recommendation.
+
+Kite scripts require `KITE_API_KEY`; `kite_auth.py` also requires `KITE_API_SECRET` and prompts privately for a request token. Configure the Kite app's registered redirect URL yourself. `export_history.py` writes a plain daily CSV and splits date ranges into at most 365-day inclusive requests. `order.py` prints a proposed NSE CNC LIMIT order by default and requires `--execute`, `--expected-user-id`, `--max-value`, and a new intent file before attempting a live order. Before submission it checks account identity, existing same-symbol open orders, and settled CNC holding quantity minus the broker's `used_quantity` for sells. It does not check funds, market hours, tick size, broader portfolio risk, T+1 inventory, or every exchange condition. Its intent file blocks duplicate submissions from this helper; after an uncertain result, reconcile that intent with Kite manually before proceeding. It is a minimal example, not complete production risk management. Do not run it live without reviewing and adapting its checks.
+
+The example does not configure or enable a VPS service or trading schedule. For an offline systemd example only, read [references/vps.md](references/vps.md); there is no live trading timer. Keep any trading timer disabled until separately configured and explicitly authorized. The backtest can run as an offline job.
 
 ## Kite authentication
 

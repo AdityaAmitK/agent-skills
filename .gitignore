@@ -8,6 +8,9 @@
 access_token.json
 credentials.json
 token.json
+.state/
+.venv/
+*.csv
 
 # Python and editor files
 __pycache__/
