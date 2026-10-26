@@ -19,7 +19,12 @@ Install `humanizer` and `coding-principal` the same way when wanted. Avoid overw
 
 - `algotrading`: includes a small Python starter toolkit for Kite daily history, CSV export, a generic strategy callback and backtest, and a bounded dry-run-first order helper. It is an example starter, not a production trading system or personal account configuration.
 - `humanizer`: adapted writing guidance with upstream attribution in `THIRD_PARTY_NOTICES.md`.
+- `remote-agent-bridge`: SSH-backed MCP tools and capability-based routing between configured T3 environments, with retry protection and staged artifact transfer.
 - `coding-principal`: balances stronger models for brainstorming, planning, and review with faster, cheaper models for writing code, aiming to retain quality while reducing cost.
+
+## Remote agent bridge
+
+`remote-agent-bridge` includes a dependency-free SSH-backed MCP server and a routing skill for delegating to other T3 environments. It supports task submission, reply retrieval, follow-ups and staged artifact transfer. See [setup](remote-agent-bridge/references/setup.md) for private peer configuration and MCP registration. Copying the skill alone does not configure SSH or install the runtime.
 
 ## AlgoTrading starter
 

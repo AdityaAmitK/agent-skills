@@ -1,0 +1,12 @@
+{
+  "machine": "device-a",
+  "t3": "/absolute/path/to/local/t3",
+  "default_project": "/absolute/path/to/local/project",
+  "peers": {
+    "device-b": {
+      "host": "bridge-device-b",
+      "python": "/absolute/path/to/remote/python3",
+      "script": "/absolute/path/to/remote/home/.local/share/t3-agent-bridge/bridge.py"
+    }
+  }
+}

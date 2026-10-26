@@ -1,0 +1,3 @@
+# Keep edited environment configuration outside version control.
+config.json
+config.local.json
