@@ -22,6 +22,10 @@ Install `humanizer` and `coding-principal` the same way when wanted. Avoid overw
 - `remote-agent-bridge`: SSH-backed MCP tools and capability-based routing between configured T3 environments, with retry protection and staged artifact transfer.
 - `coding-principal`: balances stronger models for brainstorming, planning, and review with faster, cheaper models for writing code, aiming to retain quality while reducing cost.
 
+## Kestrl
+
+Kestrl's agent skill and MCP server are maintained in the [Kestrl repository](https://github.com/AdityaAmitK/kestrl) (`skills/kestrl/SKILL.md`, `kestrl mcp`), not copied here. Its MCP tools accept a `host` argument for running a single Kestrl command on another machine over SSH; use `remote-agent-bridge` for multi-step work delegated to that machine's agent.
+
 ## Remote agent bridge
 
 `remote-agent-bridge` includes a dependency-free SSH-backed MCP server and a routing skill for delegating to other T3 environments. It supports task submission, reply retrieval, follow-ups and staged artifact transfer. See [setup](remote-agent-bridge/references/setup.md) for private peer configuration and MCP registration. Copying the skill alone does not configure SSH or install the runtime.
