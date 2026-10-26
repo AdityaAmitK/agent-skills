@@ -11,6 +11,13 @@ belongs where the service runs. Ordinary implementation stays local unless the
 user requests another environment or its capabilities are needed. Prefer native
 subagents for work on the same machine.
 
+A single command on another machine does not need a delegated agent. When the
+[Kestrl](https://github.com/AdityaAmitK/kestrl) MCP server (`kestrl mcp`) is
+configured, run requests, log reads, log attaches and port shares on a peer with
+its tools' `host` argument (an SSH host with Kestrl installed). Delegate through
+this bridge when the work needs the peer's own agent: several steps, judgement,
+or that machine's browser and apps.
+
 ## Workflow
 
 1. Call `remote_agent_targets` to discover configured peer names, then
