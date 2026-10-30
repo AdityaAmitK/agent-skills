@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Visualize"
+  short_description: "Explain project flows for teammates and stakeholders"
+  default_prompt: "Use $project-visualize to explain this implemented or planned project flow with a clear diagram."

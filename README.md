@@ -20,7 +20,12 @@ Install `humanizer` and `coding-principal` the same way when wanted. Avoid overw
 - `algotrading`: includes a small Python starter toolkit for Kite daily history, CSV export, a generic strategy callback and backtest, and a bounded dry-run-first order helper. It is an example starter, not a production trading system or personal account configuration.
 - `humanizer`: adapted writing guidance with upstream attribution in `THIRD_PARTY_NOTICES.md`.
 - `remote-agent-bridge`: SSH-backed MCP tools and capability-based routing between configured T3 environments, with retry protection and staged artifact transfer.
+- `eli5`: plain-language explanations that use Archify when diagrams or flowcharts help.
+- `project-visualize`: source-grounded project flows rendered and delivered through Archify.
+- `archify`: the bundled Archify 3.2 diagram engine, including local delivery preferences, schemas, renderers, and references.
 - `coding-principal`: balances stronger models for brainstorming, planning, and review with faster, cheaper models for writing code, aiming to retain quality while reducing cost.
+
+Install `archify` alongside `eli5` or `project-visualize` for their diagram workflows. Copy the complete directories so references, schemas, renderers, and licenses remain available.
 
 ## Kestrl
 
