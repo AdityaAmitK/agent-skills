@@ -79,6 +79,11 @@ function useSkills() {
       window.removeEventListener("focus", on)
     }
   }, [at, reload])
+  useEffect(() => {
+    if (state.loading || state.error || !state.data?.machines.some((m) => m.refresh?.status === "pending")) return
+    const timer = window.setTimeout(reload, 2000)
+    return () => window.clearTimeout(timer)
+  }, [state, reload])
   return { ...state, reload }
 }
 
@@ -232,7 +237,7 @@ export function SkillsView({ args = [] }: { args?: string[] }) {
   }
 
   const selectedRows = rows.filter((r) => selected.has(r.skill.id))
-  const syncable = selectedRows.filter((r) => r.a.source)
+  const syncable = selectedRows.filter((r) => r.a.source && r.skill.canSync !== false)
   const allVisibleSelected = visible.length > 0 && visible.every((r) => selected.has(r.skill.id))
   const someVisibleSelected = visible.some((r) => selected.has(r.skill.id))
   const open = rows.find((r) => r.skill.id === openId)
@@ -243,6 +248,11 @@ export function SkillsView({ args = [] }: { args?: string[] }) {
       <Header onRefresh={reload} loading={loading} />
 
       <Freshness machines={machines} at={at} loading={loading} skills={rows.length} drift={totalDrift} />
+
+      <p className="mb-4 text-xs text-muted-foreground" role="status">
+        {(data?.machines || []).filter((m) => m.refresh).map((m) => `${m.name || m.id} T3: ${m.refresh!.status}`).join(" · ")}
+        {" · Files update immediately. A running turn may retain instructions it already loaded."}
+      </p>
 
       {error ? (
         <Alert variant={error.kind === "server" ? "destructive" : "default"} className="mb-4">
@@ -575,7 +585,7 @@ function SkillRow({
           size="sm"
           variant={a.driftCount ? "secondary" : "ghost"}
           className={cn(!a.driftCount && "text-muted-foreground")}
-          disabled={!a.source || syncing}
+          disabled={!a.source || skill.canSync === false || syncing}
           title={a.source ? undefined : "There is no VPS copy to sync from."}
           onClick={onSync}
           aria-label={`Sync ${skill.name} from VPS`}
@@ -618,6 +628,7 @@ function InstallCell({
     drift ? "differs from VPS" : "",
     t?.version ? `version ${t.version}` : "",
     offline ? `${MACHINE_LABEL[machine.key]} is offline` : "",
+    t?.managed ? "Managed by the provider; use its plugin settings" : "",
     t?.error || error || "",
   ].filter(Boolean)
   const title = [t?.path, ...facts].filter(Boolean).join("\n")
@@ -629,7 +640,7 @@ function InstallCell({
         ) : (
           <Checkbox
             checked={installed}
-            disabled={offline || !reported}
+            disabled={offline || !reported || t?.managed}
             aria-invalid={!!error || undefined}
             className="data-disabled:cursor-not-allowed data-disabled:opacity-35"
             aria-label={`${skill.name}, ${TARGET_INFO[target].label}: ${facts.join(", ")}`}

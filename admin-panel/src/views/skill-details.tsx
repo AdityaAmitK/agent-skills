@@ -113,6 +113,19 @@ function Body({ row: { skill, a }, machines, syncing, syncError, onSync, live }:
 
         <Separator />
 
+        {skill.copies && skill.copies.length > 1 ? (
+          <section aria-label="All discovered copies">
+            <h3 className="mb-2 text-sm font-semibold">All discovered copies</h3>
+            <ul className="space-y-3 text-xs">
+              {skill.copies.map((copy) => <li key={`${copy.target}:${copy.path}`}>
+                <p>{copy.target} · {copy.origin}{copy.broken ? " · broken link" : ""}</p>
+                <p className="break-all font-mono text-muted-foreground">{copy.path}</p>
+                {copy.hash ? <p className="font-mono text-muted-foreground">{copy.hash.slice(0, 16)}</p> : null}
+              </li>)}
+            </ul>
+          </section>
+        ) : null}
+
         <section aria-labelledby="diff-h" aria-busy={diff.loading}>
           <div className="mb-2 flex items-center justify-between gap-2">
             <h3 id="diff-h" className="text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">Difference from VPS</h3>
@@ -146,7 +159,7 @@ function Body({ row: { skill, a }, machines, syncing, syncError, onSync, live }:
 
       <SheetFooter className="border-t">
         {syncError ? <p role="alert" className="text-sm text-destructive">Sync failed: {syncError}</p> : null}
-        <Button onClick={onSync} disabled={!a.source || syncing}>
+        <Button onClick={onSync} disabled={!a.source || skill.canSync === false || syncing}>
           {syncing ? <Spinner data-icon="inline-start" /> : <RefreshCwIcon data-icon="inline-start" />}
           Sync from VPS
         </Button>

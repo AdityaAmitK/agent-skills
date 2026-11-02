@@ -9,7 +9,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: '/',
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
   build: { outDir: 'dist', emptyOutDir: true },
   server: { proxy: { '/api': process.env.ADMIN_API || 'http://127.0.0.1:8790' } },
 })

@@ -22,6 +22,7 @@ export const MACHINE_LABEL: Record<MachineKey, string> = { vps: "VPS", mac: "Mac
 
 export type Target = {
   installed: boolean
+  managed?: boolean
   /** "directory", "symlink", "file"... whatever the backend reports. */
   kind?: string | null
   path?: string | null
@@ -38,6 +39,8 @@ export type Skill = {
   description?: string | null
   category?: string | null
   status?: string | null
+  canSync?: boolean
+  copies?: { path: string; target: string; origin: string; hash?: string | null; resolved?: string; broken?: boolean }[]
   targets: Partial<Record<TargetKey, Target | null>>
 }
 
@@ -49,6 +52,7 @@ export type Machine = {
   status?: string
   lastSeen?: string | number
   error?: string
+  refresh?: { status: string; message?: string }
 }
 
 export type SkillsResponse = { skills: Skill[]; machines: Machine[] }
