@@ -215,7 +215,7 @@ export function SkillsView({ args = [] }: { args?: string[] }) {
 
   const requestToggle = (skill: Skill, target: TargetKey, installed: boolean) => {
     const t = skill.targets[target]
-    // Removing a real folder deletes files; removing a link does not.
+    // Explain removal of an independently edited folder before backing it up.
     if (!installed && t?.installed && !isLink(t)) setAsk({ kind: "remove", skill, target })
     else toggle(skill, target, installed)
   }
@@ -413,7 +413,7 @@ export function SkillsView({ args = [] }: { args?: string[] }) {
         description={
           ask?.kind === "remove" ? (
             <>
-              This deletes the skill's folder{ask.skill.targets[ask.target]?.path ? <> at <span className="font-mono break-all">{ask.skill.targets[ask.target]!.path}</span></> : null}. It is a copy, not a link, so any edits made there are lost.
+              This removes the installation{ask.skill.targets[ask.target]?.path ? <> at <span className="font-mono break-all">{ask.skill.targets[ask.target]!.path}</span></> : null}. Its folder and edits are kept in a timestamped backup.
             </>
           ) : null
         }
@@ -666,7 +666,7 @@ function SyncSummary({ rows }: { rows: Row[] }) {
   const replaced = rows.flatMap((r) => TARGETS.filter((k) => r.a.drift[k]).map((k) => `${r.skill.name} for ${TARGET_INFO[k].label}`))
   return (
     <span className="flex flex-col gap-2">
-      <span>The VPS copy overwrites {replaced.length === 1 ? "a copy that differs" : `${replaced.length} copies that differ`}. Edits made only in those copies are lost.</span>
+      <span>The VPS copy replaces {replaced.length === 1 ? "a copy that differs" : `${replaced.length} copies that differ`}. The previous contents are kept in timestamped backups.</span>
       <span className="flex flex-col font-mono text-xs">
         {replaced.slice(0, 8).map((x) => <span key={x}>{x}</span>)}
         {replaced.length > 8 ? <span>and {replaced.length - 8} more</span> : null}
