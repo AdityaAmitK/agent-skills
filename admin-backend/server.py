@@ -213,7 +213,7 @@ class Handler(SimpleHTTPRequestHandler):
         if MODE=='agent':
             return False
         host=self.headers.get('Host','').split(':')[0]
-        # Public ingress is a dedicated Cloudflare tunnel with mandatory Access JWT validation.
+        # Public ingress is nginx with HTTPS and HTTP Basic authentication.
         return host==PUBLIC_HOST
 
     def do_GET(self):

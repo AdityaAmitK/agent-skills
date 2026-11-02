@@ -1,6 +1,6 @@
 # Skills administration
 
-The web app is served at `https://t3-code.adityakinjawadekar.com` through a dedicated Cloudflare tunnel with mandatory Access JWT validation and an owner-only policy. The Python server binds only to loopback. It must not be published through a proxy that skips Access validation. Mutations additionally require the exact public Origin and `X-Panel-Request: 1`.
+The chosen deployment is the VPS's existing nginx, HTTPS and HTTP Basic password authentication at `https://t3-code.adityakinjawadekar.com`. The Python server binds only to loopback. `deploy/skill-admin.nginx.conf` protects the whole dashboard and API with `/etc/nginx/skill-admin.htpasswd`; that file must exist before enabling the site. Mutations additionally require the exact public Origin and `X-Panel-Request: 1`. The earlier Cloudflare tunnel, DNS record and Access app were removed at the user's request; no Cloudflare connector is needed.
 
 ## Central packages
 
@@ -15,11 +15,11 @@ Provider-managed system skills, synced provider bundles, and plugin caches keep 
 
 ## Services
 
-VPS user units in `deploy/` run the API on `127.0.0.1:18340` and the dedicated Cloudflare connector. The server uses the sibling `admin-panel/dist` build. Private settings live under `~/.local/share/skill-admin`; no credentials belong in this repository.
+The VPS user unit in `deploy/` runs the API on `127.0.0.1:18340`. nginx is the only public ingress. The server uses the sibling `admin-panel/dist` build. Private settings live under `~/.local/share/skill-admin`; no credentials belong in this repository.
 
 On the Mac, launch agents `com.aditya.skill-admin-agent` and `com.aditya.skill-admin-tunnel` run the private machine agent on loopback port 18341 and a persistent SSH reverse forward to VPS loopback port 18342. A dedicated SSH key is restricted to that forwarding port with no shell command. Agent requests additionally use a private shared key. Sleep/disconnection produces an offline state, retaining the last known inventory. The agent has a deployed copy of `admin-backend/` under `~/.local/share/skill-admin/app`; update it when changing the backend.
 
-`config.json` holds only executable paths: `node` and `t3Cli`. `agent.key`, `tunnel-key`, and `tunnel.token` are private generated credentials; do not print, commit, or copy them into diagnostics.
+`config.json` holds only executable paths: `node` and `t3Cli`. `agent.key` and `tunnel-key` are private machine-connection credentials; do not print, commit, or copy them into diagnostics. The Mac's SSH forwarding connection is independent of public dashboard hosting.
 
 ## T3 refresh
 
