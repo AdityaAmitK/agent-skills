@@ -22,6 +22,7 @@ export const MACHINE_LABEL: Record<MachineKey, string> = { vps: "VPS", mac: "Mac
 
 export type Target = {
   installed: boolean
+  available?: boolean
   managed?: boolean
   /** "directory", "symlink", "file"... whatever the backend reports. */
   kind?: string | null
@@ -40,6 +41,7 @@ export type Skill = {
   category?: string | null
   status?: string | null
   canSync?: boolean
+  sourceTarget?: TargetKey | null
   copies?: { path: string; target: string; origin: string; hash?: string | null; resolved?: string; broken?: boolean }[]
   targets: Partial<Record<TargetKey, Target | null>>
 }
@@ -103,7 +105,7 @@ export type Analysis = {
 
 export function analyze(s: Skill): Analysis {
   const t = s.targets || {}
-  const sourceKey = (["codexVps", "claudeVps"] as const).find((k) => t[k]?.installed && !isLink(t[k])) ?? (["codexVps", "claudeVps"] as const).find((k) => t[k]?.installed)
+  const sourceKey = s.sourceTarget ?? (["codexVps", "claudeVps"] as const).find((k) => t[k]?.installed && !isLink(t[k])) ?? (["codexVps", "claudeVps"] as const).find((k) => t[k]?.installed)
   const source = sourceKey ? { key: sourceKey, target: t[sourceKey]! } : undefined
   const drift: Analysis["drift"] = {}
   let driftCount = 0

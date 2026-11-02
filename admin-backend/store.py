@@ -8,19 +8,48 @@ import os
 import re
 import shutil
 import tempfile
-from inventory import package_files
+from inventory import package_files, scan
 
 HOME = Path.home()
 STATE = HOME / '.local/share/skill-admin'
 STORE = STATE / 'skills'
 BACKUPS = STATE / 'backups'
-NAME = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$')
+NAME = re.compile(r'^(?:(?:codex|claude):)?[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$')
 
 
 def safe_name(name):
     if not isinstance(name, str) or not NAME.fullmatch(name):
         raise ValueError('Invalid skill name')
     return name
+
+
+def provider_id(entry):
+    name=entry['name']
+    canonical=Path(entry['resolved']).name
+    if ':' in canonical and NAME.fullmatch(canonical):
+        return canonical
+    scoped=(entry['origin']!='personal' or '/synced/' in entry['path'] or '/plugins/' in entry['resolved'] or '/skills/.system/' in entry['resolved'] or name in ('skill-creator','skill-installer'))
+    provider='codex' if entry['target'].startswith('codex') else 'claude'
+    return provider+':'+name if scoped else name
+
+
+def provider_source(name):
+    safe_name(name)
+    if ':' not in name:
+        raise ValueError('Skill has no central package')
+    provider, bare=name.split(':',1)
+    candidates=[e for e in scan(HOME,'Local')['entries'] if e['target']==provider+'Local' and e['name']==bare and not e['broken']]
+    if not candidates:
+        raise ValueError('No source package is available on this machine')
+    return Path(max(candidates,key=lambda e:source_priority(e,name))['path'])
+
+
+def source_priority(entry, name):
+    provider=name.split(':',1)[0]
+    direct=Path(entry['resolved']).name==name
+    native_claude=provider=='claude' and '/synced/' in entry['path']
+    version=tuple(int(n) for n in re.findall(r'\d+',entry['path']))
+    return (direct,native_claude,entry['origin']=='system',entry['origin']!='plugin',version)
 
 
 def backup(path):
@@ -46,7 +75,9 @@ def replace_link(path, destination):
 def notify_providers(name):
     # Root-directory events let provider watchers rediscover canonical content.
     for provider in ('codex','claude'):
-        link = HOME / ('.'+provider) / 'skills' / name
+        if ':' in name and name.split(':',1)[0]!=provider:
+            continue
+        link = HOME / ('.'+provider) / 'skills' / name.split(':')[-1]
         if link.is_symlink() and link.resolve() == (STORE/name).resolve():
             temp=link.with_name('.'+name+'.skill-admin-notify')
             temp.unlink(missing_ok=True)
@@ -69,7 +100,8 @@ def consolidate():
             resolved = p.resolve()
             if '/plugins/' in str(resolved) or '/skills/.system/' in str(resolved):
                 continue
-            packages.setdefault(p.name, []).append(p)
+            identity=provider_id(dict(name=p.name,path=str(p),resolved=str(resolved),origin='personal',target='codexLocal' if root.parent.name=='.codex' else 'claudeLocal'))
+            packages.setdefault(identity, []).append(p)
     changes = []
     for name, paths in packages.items():
         dest = STORE / safe_name(name)
@@ -85,7 +117,7 @@ def consolidate():
 def export_package(name):
     root = STORE / safe_name(name)
     if not (root / 'SKILL.md').is_file():
-        raise ValueError('Skill has no central package')
+        root=provider_source(name)
     files = package_files(root)
     return {'name': name, 'files': {p: {'data':base64.b64encode((root/p).read_bytes()).decode(),
                                       'mode':(root/p).stat().st_mode & 0o777}
@@ -134,10 +166,12 @@ def set_target(name, provider, installed):
     name = safe_name(name)
     if provider not in ('codex','claude') or not isinstance(installed,bool):
         raise ValueError('Invalid installation target')
+    if ':' in name and name.split(':',1)[0]!=provider:
+        raise ValueError('This skill belongs to a different provider')
     dest = STORE / name
     if not (dest/'SKILL.md').is_file():
         raise ValueError('Sync a central package before enabling it')
-    path = HOME / ('.'+provider) / 'skills' / name
+    path = HOME / ('.'+provider) / 'skills' / name.split(':')[-1]
     if installed:
         replace_link(path, dest)
     else:

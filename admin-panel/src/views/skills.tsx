@@ -322,7 +322,7 @@ export function SkillsView({ args = [] }: { args?: string[] }) {
         ) : (
           <Table className="min-w-[760px]">
             <caption className="sr-only">
-              Skills and where they are installed. Each checkbox installs or removes a skill for one agent on one machine. The VPS copy is the source.
+              Checkboxes manage direct installations. Provider-only skills sync between that provider's Mac and VPS; bundled copies remain with the provider. The VPS copy is the source.
             </caption>
             <TableHeader className="[&_tr]:border-b-0">
               <TableRow className="hover:bg-transparent">
@@ -628,7 +628,8 @@ function InstallCell({
     drift ? "differs from VPS" : "",
     t?.version ? `version ${t.version}` : "",
     offline ? `${MACHINE_LABEL[machine.key]} is offline` : "",
-    t?.managed ? "Managed by the provider; use its plugin settings" : "",
+    t?.managed ? "This skill belongs to the other provider" : "",
+    !installed && t?.available ? "Bundled source available; check to install a synced copy" : "",
     t?.error || error || "",
   ].filter(Boolean)
   const title = [t?.path, ...facts].filter(Boolean).join("\n")

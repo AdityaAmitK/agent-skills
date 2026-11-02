@@ -11,7 +11,7 @@ Personal provider installations point into these stores. The VPS is authoritativ
 
 Every replaced folder or link is moved under `~/.local/share/skill-admin/backups` with a UTC timestamp and original path. Baseline manifests and the full audit are kept privately under the Mac's `~/.local/share/skill-admin/audit`, outside the source repository. Legacy root personal installations on the VPS point to the same VPS store; their originals are under `backups/legacy-root`.
 
-Provider-managed system skills, synced provider bundles, and plugin caches keep their provider lifecycle. Cached packages are listed with their paths and hashes but are not claimed to be active installations. Their checkboxes are locked. Versioned cache copies appear in skill details. The existing nested `skill-creator` variant is retained rather than silently replacing a provider bundle.
+Provider-specific skills have separate `codex:<name>` and `claude:<name>` packages and rows. They can be synced between the same provider on Mac and VPS, with independent direct-install checkboxes. The other provider's columns are unavailable. Bundled files and plugin caches remain intact: checking a box installs a synced personal copy; unchecking removes that direct installation, while a provider's own bundled copy may remain available. These controls manage skill instructions/resources, not plugin activation or connected accounts. For Claude skill-creator, the Claude-native synced bundle is the source rather than the same-named Codex system skill.
 
 ## Services
 

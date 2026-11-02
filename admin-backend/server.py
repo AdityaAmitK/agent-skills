@@ -15,7 +15,7 @@ import urllib.request
 import urllib.error
 from urllib.parse import unquote, urlparse
 from inventory import scan, package_files
-from store import HOME, STATE, STORE, safe_name, export_package, import_package, set_target
+from store import HOME, STATE, STORE, safe_name, export_package, import_package, set_target, provider_id, source_priority
 
 LOCK = threading.RLock()
 MACHINE = 'Mac'
@@ -69,6 +69,7 @@ def local_inventory():
     if CACHE.get('until',0)>now:
         return CACHE['data']
     data = scan(HOME, MACHINE)
+    data['packages']=[p.name for p in STORE.iterdir() if (p/'SKILL.md').is_file()] if STORE.exists() else []
     for entry in data['entries']:
         entry['metadata']=metadata(entry['path'])
     CACHE.update(until=now+3,data=data)
@@ -150,32 +151,39 @@ def skills():
     rows={}
     for inv in inventories:
         for e in inv['entries']:
-            name=e['name'];row=rows.setdefault(name,dict(id=name,name=name,description='',category='personal',status='synced',targets={},copies=[]))
-            row['copies'].append(e)
-            # Top-level provider installation takes precedence over nested synced copies.
-            old=row['targets'].get(e['target'])
-            if old and ('/synced/' in e['path'] or e['origin']=='plugin'):
+            if not e['target'].startswith(('codex','claude')):
                 continue
-            managed=e['origin']!='personal' or '/plugins/' in e['resolved'] or '/skills/.system/' in e['resolved'] or '/synced/' in e['path']
-            cached=e['origin']=='plugin'
-            row['targets'][e['target']]=dict(installed=not e['broken'] and not cached,kind='cache' if cached else 'broken' if e['broken'] else 'symlink' if e['symlink'] else 'directory',path=e['path'],linkTarget=e['resolved'] if e['symlink'] else None,hash=e['hash'],version=None,managed=managed,error='Broken skill link' if e['broken'] else None)
-            if managed:
-                row['category']='provider managed'
-            meta=e.get('metadata',{})
-            if not row['description']:
-                row['description']=meta.get('description','')
-            row['targets'][e['target']]['version']=meta.get('version')
-    # Retain disabled central skills in the list so they can be enabled again.
-    for p in STORE.iterdir() if STORE.exists() else []:
-        if not p.name.startswith('.') and (p/'SKILL.md').is_file():
-            rows.setdefault(p.name,dict(id=p.name,name=p.name,description=metadata(p).get('description',''),category='personal',status='disabled',targets={},copies=[]))
+            identity=provider_id(e)
+            provider=identity.split(':',1)[0] if ':' in identity else None
+            row=rows.setdefault(identity,dict(id=identity,name=e['name'],description='',category=(provider+' only') if provider else 'shared',status='synced',targets={},copies=[]))
+            row['copies'].append(e)
+        for identity in inv.get('packages',[]):
+            if identity in ('skill-creator','skill-installer'):
+                continue
+            provider=identity.split(':',1)[0] if ':' in identity else None
+            row=rows.setdefault(identity,dict(id=identity,name=identity.split(':')[-1],description='',category=(provider+' only') if provider else 'shared',status='disabled',targets={},copies=[]))
+            row.setdefault('storedMachines',[]).append(inv['machine'])
     for row in rows.values():
-        hashes={v['hash'] for v in row['targets'].values() if v['hash'] and v['installed']}
-        installed=[k for k,v in row['targets'].items() if v['installed']]
-        row['status']='drift' if len(hashes)>1 else 'vps-only' if installed and all(k.endswith('Vps') for k in installed) else 'mac-only' if installed and all(k.endswith('Mac') for k in installed) else 'synced' if installed else 'disabled'
-        row['canSync']=(STORE/row['id']/'SKILL.md').is_file()
+        identity=row['id']
+        provider=identity.split(':',1)[0] if ':' in identity else None
         for target in ('codexVps','claudeVps','codexMac','claudeMac'):
-            row['targets'].setdefault(target,dict(installed=False,kind='missing',path=None,hash=None,version=None,managed=not row['canSync'] and row['category']=='provider managed'))
+            compatible=not provider or target.startswith(provider)
+            candidates=[e for e in row['copies'] if e['target']==target]
+            entry=max(candidates,key=lambda e:source_priority(e,identity)) if candidates else None
+            direct=bool(entry and not entry['broken'] and (not provider or Path(entry['resolved']).name==identity))
+            available=bool(entry and not entry['broken']) or target.removeprefix('codex').removeprefix('claude') in row.get('storedMachines',[])
+            row['targets'][target]=dict(installed=direct,available=available,managed=not compatible,
+                kind=('symlink' if entry['symlink'] else 'directory') if direct else 'bundled' if available else 'missing',
+                path=entry['path'] if entry else None,linkTarget=entry['resolved'] if entry and entry['symlink'] else None,
+                hash=entry['hash'] if entry else None,version=entry.get('metadata',{}).get('version') if entry else None)
+            if entry and not row['description']:
+                row['description']=entry.get('metadata',{}).get('description','')
+        sources=[k for k,v in row['targets'].items() if k.endswith('Vps') and v['available'] and not v['managed']]
+        row['sourceTarget']=sources[0] if sources else None
+        row['canSync']=bool(sources)
+        installed=[k for k,v in row['targets'].items() if v['installed']]
+        hashes={v['hash'] for v in row['targets'].values() if v['installed'] and v['hash']}
+        row['status']='drift' if len(hashes)>1 else 'vps-only' if installed and all(k.endswith('Vps') for k in installed) else 'mac-only' if installed and all(k.endswith('Mac') for k in installed) else 'synced' if installed else 'available'
     return dict(skills=sorted(rows.values(),key=lambda x:x['name']),machines=machines,
                 refresh=dict(files='Immediate after a successful operation',t3='Active-chat discovery has not yet been verified'))
 
@@ -279,12 +287,20 @@ class Handler(SimpleHTTPRequestHandler):
                         raise ValueError('Invalid target')
                     provider='codex' if target.startswith('codex') else 'claude'
                     if target.endswith('Mac'):
-                        if installed and (STORE/name/'SKILL.md').is_file():
-                            mac('import',package=export_package(name))
+                        if installed:
+                            try:
+                                package=export_package(name)
+                            except ValueError:
+                                package=mac('export',name=name)
+                            mac('import',package=package)
                         result=mac('target',name=name,provider=provider,installed=installed)
                     else:
                         if installed and not (STORE/name/'SKILL.md').is_file():
-                            import_package(mac('export',name=name))
+                            try:
+                                package=export_package(name)
+                            except ValueError:
+                                package=mac('export',name=name)
+                            import_package(package)
                         result=rpc('target',name=name,provider=provider,installed=installed)
                 else:
                     return self.respond({'error':'Not found'},404)
