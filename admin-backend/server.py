@@ -197,6 +197,10 @@ class Handler(SimpleHTTPRequestHandler):
         print('%s %s'%(self.command,urlparse(self.path).path),flush=True)
 
     def end_headers(self):
+        path=urlparse(self.path).path
+        if not path.startswith(('/api/','/internal')):
+            asset=path.startswith('/assets/') and Path(self.translate_path(path)).is_file()
+            self.send_header('Cache-Control','public, max-age=31536000, immutable' if asset else 'no-store')
         self.send_header('X-Content-Type-Options','nosniff')
         self.send_header('X-Frame-Options','DENY')
         self.send_header('Referrer-Policy','same-origin')
@@ -252,6 +256,8 @@ class Handler(SimpleHTTPRequestHandler):
             if not (PANEL/'index.html').is_file():
                 return self.respond({'error':'Panel build is not installed'},503)
             if not Path(self.translate_path(path)).is_file():
+                if path.startswith('/assets/'):
+                    return self.respond({'error':'Asset not found; reload the dashboard'},404)
                 self.path='/index.html'
             return super().do_GET()
         except (ValueError, OSError) as exc:

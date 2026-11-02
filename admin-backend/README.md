@@ -15,7 +15,7 @@ Provider-specific skills have separate `codex:<name>` and `claude:<name>` packag
 
 ## Services
 
-The VPS user unit in `deploy/` runs the API on `127.0.0.1:18340`. nginx is the only public ingress. The server uses the sibling `admin-panel/dist` build. Private settings live under `~/.local/share/skill-admin`; no credentials belong in this repository.
+The VPS user unit in `deploy/` runs the API on `127.0.0.1:18340`. nginx is the only public ingress. The server uses the sibling `admin-panel/dist` build. `npm run build` builds into temporary staging, copies assets without removing previous hashed versions, and atomically replaces the index last. The index is served with `no-store`; existing hashed assets are immutable, and missing assets return 404 rather than HTML. Private settings live under `~/.local/share/skill-admin`; no credentials belong in this repository.
 
 On the Mac, launch agents `com.aditya.skill-admin-agent` and `com.aditya.skill-admin-tunnel` run the private machine agent on loopback port 18341 and a persistent SSH reverse forward to VPS loopback port 18342. A dedicated SSH key is restricted to that forwarding port with no shell command. Agent requests additionally use a private shared key. Sleep/disconnection produces an offline state, retaining the last known inventory. The agent has a deployed copy of `admin-backend/` under `~/.local/share/skill-admin/app`; update it when changing the backend.
 
