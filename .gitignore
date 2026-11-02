@@ -18,3 +18,7 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+
+# Residual build artifacts from the manager's move to its private repository
+/admin-panel/node_modules/
+/admin-panel/dist/
